@@ -1,0 +1,29 @@
+name:                pngfaff
+version:             0.1.0.0
+synopsis:            Faff around with PNG files.
+#description:
+#homepage:
+license:             ISC
+author:              Nathan Ingle
+maintainer:          elgni.nahtan@gmail.com
+copyright:           2021 Nathan Ingle
+category:            Graphics
+
+ghc-options: -Wall -Wcompat -Werror -O2 -Wnoncanonical-monad-instances
+
+dependencies:
+  - base >= 4.7 && < 5
+  - bytestring
+  - cereal
+  - zlib
+
+library:
+  source-dirs:      src
+  exposed-modules:
+    - FileFormat
+
+executables:
+  pngfaff:
+    main:             pngfaff.hs
+    dependencies:
+      - pngfaff

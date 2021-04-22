@@ -1,0 +1,6 @@
+.*.swp
+/stack/
+/dist/
+/dist-newstyle/
+/.ghc.environment.*
+
