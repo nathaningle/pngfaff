@@ -1,7 +1,7 @@
 {- |
 Module      : FileFormat
 Copyright   : (c) 2021 Nathan Ingle
-Licence     : ISC
+License     : ISC
 
 Maintainer  : elgni.nahtan@gmail.com
 Stability   : experimental
@@ -66,14 +66,14 @@ data Chunk = Ihdr
   , chIhdrInterlace :: InterlaceMethod
   }
   | Plte [Colour]
-  | Idat Zdata
+  | Idat ImageData
   | Iend
   | UnknownChunk String ByteString
   deriving (Eq, Ord, Show)
 
 instance Serialize Chunk where
   put (Plte colours  )      = putChunkWith $ runPut $ putByteString "PLTE" >> mapM_ put colours
-  put (Idat (Zdata d))      = putChunkWith $ "IDAT" <> (BL.toStrict $ compress $ BL.fromStrict d)
+  put (Idat (ImageData d))      = putChunkWith $ "IDAT" <> (BL.toStrict $ compress $ BL.fromStrict d)
   put Iend                  = putChunkWith "IEND"
   put (UnknownChunk _ body) = putChunkWith body
   put Ihdr {..}             = putChunkWith body
@@ -102,7 +102,7 @@ instance Serialize Chunk where
         "PLTE" -> Plte <$> many get
         -- TODO: catch exceptions in 'decompress'.
         "IDAT" ->
-          Idat . Zdata . BL.toStrict . decompress . BL.fromStrict <$> (remaining >>= getByteString)
+          Idat . ImageData . BL.toStrict . decompress . BL.fromStrict <$> (remaining >>= getByteString)
         "IEND" -> pure Iend
         _      -> do
           n     <- remaining
@@ -204,9 +204,10 @@ instance Serialize InterlaceMethod where
       _ -> fail $ "Invalid InterlaceMethod (" ++ show b ++ ")"
 
 
-newtype Zdata = Zdata ByteString deriving (Eq, Ord, Show)
+-- | Image data as it appears in image data (IDAT) chunks.
+newtype ImageData = ImageData ByteString deriving (Eq, Ord, Show)
 
--- | Colours as they appear in palette (PLTE) blocks.
+-- | Colours as they appear in palette (PLTE) chunks.
 type Colour = (Word8, Word8, Word8)
 
 

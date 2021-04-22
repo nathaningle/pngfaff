@@ -27,3 +27,12 @@ executables:
     main:             pngfaff.hs
     dependencies:
       - pngfaff
+
+tests:
+  test:
+    source-dirs:      test
+    main:             test.hs
+    dependencies:
+      - pngfaff
+      - tasty
+      - tasty-hunit

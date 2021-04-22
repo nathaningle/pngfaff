@@ -1,7 +1,7 @@
 {- |
 File        : pngfaff.hs
 Copyright   : (c) 2021 Nathan Ingle
-Licence     : ISC
+License     : ISC
 
 Maintainer  : elgni.nahtan@gmail.com
 Stability   : experimental
