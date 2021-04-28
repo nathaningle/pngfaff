@@ -17,9 +17,6 @@ written correctly per the W3C specification at http://www.w3.org/TR/PNG.
 {-# LANGUAGE RecordWildCards #-}
 module FileFormat where
 
-import           Codec.Compression.Zlib         ( compress
-                                                , decompress
-                                                )
 import           Control.Applicative            ( many )
 import           Control.Monad                  ( unless )
 import           Data.Bits                      ( shiftR
@@ -29,7 +26,6 @@ import           Data.Bits                      ( shiftR
 import           Data.ByteString                ( ByteString )
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as BC
-import qualified Data.ByteString.Lazy          as BL
 import           Data.Serialize
 import           Data.Word                      ( Word32
                                                 , Word8
@@ -66,14 +62,14 @@ data Chunk = Ihdr
   , chIhdrInterlace :: InterlaceMethod
   }
   | Plte [Colour]
-  | Idat ImageData
+  | Idat ZData
   | Iend
   | UnknownChunk String ByteString
   deriving (Eq, Ord, Show)
 
 instance Serialize Chunk where
   put (Plte colours  )      = putChunkWith $ runPut $ putByteString "PLTE" >> mapM_ put colours
-  put (Idat (ImageData d))      = putChunkWith $ "IDAT" <> (BL.toStrict $ compress $ BL.fromStrict d)
+  put (Idat (ZData d))      = putChunkWith $ "IDAT" <> d
   put Iend                  = putChunkWith "IEND"
   put (UnknownChunk _ body) = putChunkWith body
   put Ihdr {..}             = putChunkWith body
@@ -100,9 +96,7 @@ instance Serialize Chunk where
       case hdrlabel of
         "IHDR" -> Ihdr <$> get <*> get <*> get <*> get <*> get <*> get
         "PLTE" -> Plte <$> many get
-        -- TODO: catch exceptions in 'decompress'.
-        "IDAT" ->
-          Idat . ImageData . BL.toStrict . decompress . BL.fromStrict <$> (remaining >>= getByteString)
+        "IDAT" -> Idat . ZData <$> (remaining >>= getByteString)
         "IEND" -> pure Iend
         _      -> do
           n     <- remaining
@@ -204,8 +198,8 @@ instance Serialize InterlaceMethod where
       _ -> fail $ "Invalid InterlaceMethod (" ++ show b ++ ")"
 
 
--- | Image data as it appears in image data (IDAT) chunks.
-newtype ImageData = ImageData ByteString deriving (Eq, Ord, Show)
+-- | Compressed image data as it appears in image data (IDAT) chunks.
+newtype ZData = ZData ByteString deriving (Eq, Ord, Show)
 
 -- | Colours as they appear in palette (PLTE) chunks.
 type Colour = (Word8, Word8, Word8)

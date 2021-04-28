@@ -15,12 +15,14 @@ dependencies:
   - base >= 4.7 && < 5
   - bytestring
   - cereal
+  - optparse-applicative
   - zlib
 
 library:
   source-dirs:      src
   exposed-modules:
     - FileFormat
+    - Options
 
 executables:
   pngfaff:
