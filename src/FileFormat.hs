@@ -224,3 +224,20 @@ crcLUT = map (go 8) [0 .. 255]
    where
     c' | even c    = c `shiftR` 1
        | otherwise = 0xedb88320 `xor` (c `shiftR` 1)
+
+
+-- | Briefly describe a 'Chunk'.
+listChunk :: Chunk -> String
+listChunk Ihdr {..} =
+  init
+    $ unlines
+    $ [ "IHDR"
+      , "  Width:                 " ++ show chIhdrWidth
+      , "  Height:                " ++ show chIhdrHeight
+      , "  Bit depth/colour type: " ++ show chIhdrBDCT
+      , "  Compression method:    " ++ show chIhdrCompress
+      , "  Filter method:         " ++ show chIhdrFilter
+      , "  Interlace method:      " ++ show chIhdrInterlace
+      ]
+listChunk (Idat _) = "IDAT <image data>"
+listChunk chunk    = show chunk

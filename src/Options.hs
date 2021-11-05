@@ -14,14 +14,18 @@ module Options where
 import           Options.Applicative
 
 
-data FaffCommand = Dump FilePath | DumpZdata FilePath deriving (Eq, Ord, Show)
+data FaffCommand = Dump FilePath
+                 | DumpZdata FilePath
+                 | ListChunks FilePath
+                 | Reencode FilePath FilePath
+                 deriving (Eq, Ord, Show)
 
 
 optionParser :: ParserInfo FaffCommand
 optionParser = info (helper <*> faffCommand) (fullDesc <> progDesc "Faff around with PNG files.")
 
 faffCommand :: Parser FaffCommand
-faffCommand = hsubparser (dumpCommand <> dumpZdataCommand)
+faffCommand = hsubparser (dumpCommand <> dumpZdataCommand <> listChunksCommand <> reencodeCommand)
 
 dumpCommand :: Mod CommandFields FaffCommand
 dumpCommand = command "dump" (info dumpOptions (progDesc "Dump PNG file data"))
@@ -36,3 +40,21 @@ dumpZdataCommand = command "dump-zdata" (info dumpZdataOptions (progDesc "Dump z
 dumpZdataOptions :: Parser FaffCommand
 dumpZdataOptions =
   DumpZdata <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Input PNG file")
+
+listChunksCommand :: Mod CommandFields FaffCommand
+listChunksCommand = command "list" (info listChunksOptions (progDesc "List PNG file chunks"))
+
+listChunksOptions :: Parser FaffCommand
+listChunksOptions =
+  ListChunks <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Input PNG file")
+
+reencodeCommand :: Mod CommandFields FaffCommand
+reencodeCommand = command
+  "reencode"
+  (info reencodeOptions (progDesc "Round-trip a PNG file through the parser and encoder"))
+
+reencodeOptions :: Parser FaffCommand
+reencodeOptions =
+  Reencode
+    <$> strArgument (metavar "INFILE" <> value "-" <> showDefault <> help "Input PNG file")
+    <*> strArgument (metavar "OUTFILE" <> value "-" <> showDefault <> help "Output PNG file")
