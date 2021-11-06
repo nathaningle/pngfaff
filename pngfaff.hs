@@ -9,7 +9,6 @@ Portability : non-portable
 
 Dump the components of a PNG file.
 -}
-{-# LANGUAGE TypeApplications #-}
 import           FileFormat
 import           Options
 
@@ -61,4 +60,13 @@ extractZdata _                = mempty
 
 -- | Helper for @reencode@ command-line command.
 reencode :: ByteString -> Either String ByteString
-reencode = fmap (encode @PngFile) . decode
+reencode bs = do
+  PngFile chunks <- decode bs
+  let img  = extractData chunks
+      idat = encodeData img
+      png' = PngFile $ filter f chunks ++ [idat, Iend]
+  pure $ encode png'
+ where
+  f (Idat _) = False
+  f Iend     = False
+  f _        = True

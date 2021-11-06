@@ -17,6 +17,9 @@ written correctly per the W3C specification at http://www.w3.org/TR/PNG.
 {-# LANGUAGE RecordWildCards #-}
 module FileFormat where
 
+import           Codec.Compression.Zlib         ( compress
+                                                , decompress
+                                                )
 import           Control.Applicative            ( many )
 import           Control.Monad                  ( unless )
 import           Data.Bits                      ( shiftR
@@ -26,6 +29,8 @@ import           Data.Bits                      ( shiftR
 import           Data.ByteString                ( ByteString )
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as BC
+import qualified Data.ByteString.Lazy          as BL
+import           Data.Maybe                     ( mapMaybe )
 import           Data.Serialize
 import           Data.Word                      ( Word32
                                                 , Word8
@@ -228,16 +233,26 @@ crcLUT = map (go 8) [0 .. 255]
 
 -- | Briefly describe a 'Chunk'.
 listChunk :: Chunk -> String
-listChunk Ihdr {..} =
-  init
-    $ unlines
-    $ [ "IHDR"
-      , "  Width:                 " ++ show chIhdrWidth
-      , "  Height:                " ++ show chIhdrHeight
-      , "  Bit depth/colour type: " ++ show chIhdrBDCT
-      , "  Compression method:    " ++ show chIhdrCompress
-      , "  Filter method:         " ++ show chIhdrFilter
-      , "  Interlace method:      " ++ show chIhdrInterlace
-      ]
+listChunk Ihdr {..} = init $ unlines
+  [ "IHDR"
+  , "  Width:                 " ++ show chIhdrWidth
+  , "  Height:                " ++ show chIhdrHeight
+  , "  Bit depth/colour type: " ++ show chIhdrBDCT
+  , "  Compression method:    " ++ show chIhdrCompress
+  , "  Filter method:         " ++ show chIhdrFilter
+  , "  Interlace method:      " ++ show chIhdrInterlace
+  ]
 listChunk (Idat _) = "IDAT <image data>"
 listChunk chunk    = show chunk
+
+
+-- | Decompress image data from 'Idat' chunks.
+extractData :: [Chunk] -> ByteString
+extractData = BL.toStrict . decompress . BL.fromChunks . mapMaybe getZData
+ where
+  getZData (Idat (ZData bs)) = Just bs
+  getZData _                 = Nothing
+
+-- | Compress image data into an 'Idat' chunk.
+encodeData :: ByteString -> Chunk
+encodeData = Idat . ZData . BL.toStrict . compress . BL.fromStrict
