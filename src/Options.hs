@@ -18,6 +18,7 @@ data FaffCommand = Dump FilePath
                  | DumpZdata FilePath
                  | ListChunks FilePath
                  | Reencode FilePath FilePath
+                 | Demo FilePath
                  deriving (Eq, Ord, Show)
 
 
@@ -25,7 +26,8 @@ optionParser :: ParserInfo FaffCommand
 optionParser = info (helper <*> faffCommand) (fullDesc <> progDesc "Faff around with PNG files.")
 
 faffCommand :: Parser FaffCommand
-faffCommand = hsubparser (dumpCommand <> dumpZdataCommand <> listChunksCommand <> reencodeCommand)
+faffCommand = hsubparser
+  (dumpCommand <> dumpZdataCommand <> listChunksCommand <> reencodeCommand <> demoCommand)
 
 dumpCommand :: Mod CommandFields FaffCommand
 dumpCommand = command "dump" (info dumpOptions (progDesc "Dump PNG file data"))
@@ -58,3 +60,10 @@ reencodeOptions =
   Reencode
     <$> strArgument (metavar "INFILE" <> value "-" <> showDefault <> help "Input PNG file")
     <*> strArgument (metavar "OUTFILE" <> value "-" <> showDefault <> help "Output PNG file")
+
+demoCommand :: Mod CommandFields FaffCommand
+demoCommand = command "demo" (info demoOptions (progDesc "Demo PNG file data"))
+
+demoOptions :: Parser FaffCommand
+demoOptions =
+  Demo <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Output PNG file")

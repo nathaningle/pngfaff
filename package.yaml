@@ -15,13 +15,16 @@ dependencies:
   - base >= 4.7 && < 5
   - bytestring
   - cereal
+  - OddWord
   - optparse-applicative
+  - vector >= 0.12.2
   - zlib
 
 library:
   source-dirs:      src
   exposed-modules:
     - FileFormat
+    - ImageData
     - Options
 
 executables:

@@ -10,6 +10,9 @@ Portability : non-portable
 Dump the components of a PNG file.
 -}
 import           FileFormat
+import           ImageData                      ( encodeGreyscale4
+                                                , sampleImage4
+                                                )
 import           Options
 
 import           Data.ByteString                ( ByteString )
@@ -47,6 +50,13 @@ main = do
         "-"        -> BS.getContents
         infilename -> BS.readFile infilename
       let Right outbs = reencode inbs
+      case outfile of
+        "-"         -> BS.putStr outbs
+        outfilename -> BS.writeFile outfilename outbs
+    Demo outfile -> do
+      let ihdr  = Ihdr 16 16 Greyscale4 Deflate Adaptive NoInterlace
+          png   = PngFile [ihdr, encodeGreyscale4 sampleImage4, Iend]
+          outbs = encode png
       case outfile of
         "-"         -> BS.putStr outbs
         outfilename -> BS.writeFile outfilename outbs
