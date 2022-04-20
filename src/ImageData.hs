@@ -22,7 +22,9 @@ import qualified Data.ByteString.Lazy          as BL
 import           Data.Vector                    ( Vector )
 import qualified Data.Vector                   as V
 import           Data.Word                      ( Word8 )
-import           Data.Word.Odd                  ( Word4 )
+import           Data.Word.Odd                  ( Word1
+                                                , Word4
+                                                )
 
 
 sampleImage8 :: Vector (Vector Word8)
@@ -84,3 +86,20 @@ encodeRowGreyscale4 row = BB.word8 0 <> case V.foldl' go (mempty, Nothing) row o
  where
   go (bs, Nothing) px = let x = fromIntegral px in (bs, Just (x `shiftL` 4))
   go (bs, Just x0) px = let x1 = fromIntegral px in (bs <> BB.word8 (x0 .|. x1), Nothing)
+
+
+encodeGreyscale1 :: Vector (Vector Word1) -> Chunk
+encodeGreyscale1 = encodeData . BL.toStrict . BB.toLazyByteString . V.foldMap' encodeRowGreyscale1
+
+encodeRowGreyscale1 :: Vector Word1 -> BB.Builder
+encodeRowGreyscale1 row = BB.word8 0 <> case V.foldl' go (mempty, Nothing) row of
+  (bs, Nothing    ) -> bs
+  (bs, Just (x, _)) -> bs <> BB.word8 x
+ where
+  go (bs, Nothing) px = let x = fromIntegral px in (bs, Just (x `shiftL` 7, 1))
+  go (bs, Just (x0, i)) px | i > 7     = error "encodeRowGreyscale1: broken invariant: i > 7"
+                           | i == 7    = (bs <> BB.word8 x', Nothing)
+                           | otherwise = (bs, Just (x', i + 1))
+   where
+    x1 = fromIntegral px `shiftL` (7 - i)
+    x' = x0 .|. x1

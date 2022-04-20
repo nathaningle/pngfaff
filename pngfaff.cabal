@@ -20,6 +20,7 @@ library
       FileFormat
       ImageData
       Options
+      Xbm
   other-modules:
       Paths_pngfaff
   hs-source-dirs:
@@ -27,10 +28,12 @@ library
   ghc-options: -Wall -Wcompat -Werror -O2 -Wnoncanonical-monad-instances
   build-depends:
       OddWord
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , cereal
     , optparse-applicative
+    , text
     , vector >=0.12.2
     , zlib
   default-language: Haskell2010
@@ -42,11 +45,13 @@ executable pngfaff
   ghc-options: -Wall -Wcompat -Werror -O2 -Wnoncanonical-monad-instances
   build-depends:
       OddWord
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , cereal
     , optparse-applicative
     , pngfaff
+    , text
     , vector >=0.12.2
     , zlib
   default-language: Haskell2010
@@ -56,12 +61,14 @@ test-suite test
   main-is: test.hs
   other-modules:
       FileFormat.Test
+      ImageData.Test
       Paths_pngfaff
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Werror -O2 -Wnoncanonical-monad-instances
   build-depends:
       OddWord
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , cereal
@@ -69,6 +76,7 @@ test-suite test
     , pngfaff
     , tasty
     , tasty-hunit
+    , text
     , vector >=0.12.2
     , zlib
   default-language: Haskell2010

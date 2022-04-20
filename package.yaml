@@ -13,10 +13,12 @@ ghc-options: -Wall -Wcompat -Werror -O2 -Wnoncanonical-monad-instances
 
 dependencies:
   - base >= 4.7 && < 5
+  - attoparsec
   - bytestring
   - cereal
   - OddWord
   - optparse-applicative
+  - text
   - vector >= 0.12.2
   - zlib
 
@@ -26,6 +28,7 @@ library:
     - FileFormat
     - ImageData
     - Options
+    - Xbm
 
 executables:
   pngfaff:
