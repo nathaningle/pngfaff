@@ -10,16 +10,22 @@ Portability : non-portable
 Dump the components of a PNG file.
 -}
 import           FileFormat
-import           ImageData                      ( encodeGreyscale4
+import           ImageData                      ( encodeGreyscale1
+                                                , encodeGreyscale4
                                                 , sampleImage4
                                                 )
 import           Options
+import           Xbm                            ( parseXbm )
 
+import qualified Data.Attoparsec.Text          as A
 import           Data.ByteString                ( ByteString )
 import qualified Data.ByteString               as BS
 import           Data.Serialize                 ( decode
                                                 , encode
                                                 )
+import           Data.Text                      ( Text )
+import qualified Data.Text.IO                  as TIO
+import qualified Data.Vector                   as V
 import           Options.Applicative            ( execParser )
 
 
@@ -60,6 +66,14 @@ main = do
       case outfile of
         "-"         -> BS.putStr outbs
         outfilename -> BS.writeFile outfilename outbs
+    FromXbm infile outfile -> do
+      intxt <- case infile of
+        "-"        -> TIO.getContents
+        infilename -> TIO.readFile infilename
+      let Right outbs = fromXbm intxt
+      case outfile of
+        "-"         -> BS.putStr outbs
+        outfilename -> BS.writeFile outfilename outbs
 
 
 -- | Helper for @dump-zdata@ command-line command.
@@ -80,3 +94,13 @@ reencode bs = do
   f (Idat _) = False
   f Iend     = False
   f _        = True
+
+
+-- | Helper for @from-xbm@ command-line command.
+fromXbm :: Text -> Either String ByteString
+fromXbm s = do
+  (w, h, bits) <- A.parseOnly (parseXbm <* A.skipSpace <* A.endOfInput) s
+  let rows = V.fromList [ V.slice i w bits | i <- [0, w .. (w * h - 1)] ]
+      ihdr = Ihdr (fromIntegral w) (fromIntegral h) Greyscale1 Deflate Adaptive NoInterlace
+      png  = PngFile [ihdr, encodeGreyscale1 rows, Iend]
+  pure $ encode png

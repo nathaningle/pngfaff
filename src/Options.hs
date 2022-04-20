@@ -19,6 +19,7 @@ data FaffCommand = Dump FilePath
                  | ListChunks FilePath
                  | Reencode FilePath FilePath
                  | Demo FilePath
+                 | FromXbm FilePath FilePath
                  deriving (Eq, Ord, Show)
 
 
@@ -27,7 +28,13 @@ optionParser = info (helper <*> faffCommand) (fullDesc <> progDesc "Faff around 
 
 faffCommand :: Parser FaffCommand
 faffCommand = hsubparser
-  (dumpCommand <> dumpZdataCommand <> listChunksCommand <> reencodeCommand <> demoCommand)
+  (  dumpCommand
+  <> dumpZdataCommand
+  <> listChunksCommand
+  <> reencodeCommand
+  <> demoCommand
+  <> fromXbmCommand
+  )
 
 dumpCommand :: Mod CommandFields FaffCommand
 dumpCommand = command "dump" (info dumpOptions (progDesc "Dump PNG file data"))
@@ -67,3 +74,13 @@ demoCommand = command "demo" (info demoOptions (progDesc "Demo PNG file data"))
 demoOptions :: Parser FaffCommand
 demoOptions =
   Demo <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Output PNG file")
+
+fromXbmCommand :: Mod CommandFields FaffCommand
+fromXbmCommand =
+  command "from-xbm" (info fromXbmOptions (progDesc "Convert an X BitMap (XBM) file to PNG"))
+
+fromXbmOptions :: Parser FaffCommand
+fromXbmOptions =
+  FromXbm
+    <$> strArgument (metavar "INFILE" <> value "-" <> showDefault <> help "Input XBM file")
+    <*> strArgument (metavar "OUTFILE" <> value "-" <> showDefault <> help "Output PNG file")

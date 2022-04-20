@@ -15,7 +15,6 @@ module Xbm where
 import           Control.Monad                  ( guard )
 import           Data.Attoparsec.Text
 import           Data.Bits                      ( complement
-                                                , shiftL
                                                 , shiftR
                                                 , (.&.)
                                                 )
@@ -75,7 +74,7 @@ parseBytes = do
   end   = skipSpace *> char '}' *> skipSpace *> char ';'
 
 byteToBits :: Word8 -> Vector Word1
-byteToBits = V.unfoldrExactN 8 (\b -> (fromIntegral ((b .&. 0x80) `shiftR` 7), b `shiftL` 1))
+byteToBits = V.unfoldrExactN 8 (\b -> (fromIntegral (b .&. 0x01), b `shiftR` 1))
 
 bytesToBits :: [Word8] -> Vector Word1
 bytesToBits = V.concat . map byteToBits
@@ -85,8 +84,8 @@ parseBits = bytesToBits <$> parseBytes
 
 parseXbm :: Parser (Int, Int, Vector Word1)
 parseXbm = do
-  w <- parseDefineWidth <* skipSpace
-  h <- parseDefineHeight <* skipSpace
-  b <- V.map complement <$> parseBits
-  guard $ V.length b == w * h
-  return (w, h, b)
+  w    <- parseDefineWidth <* skipSpace
+  h    <- parseDefineHeight <* skipSpace
+  bits <- V.map complement <$> parseBits
+  guard $ V.length bits == w * h
+  return (w, h, bits)
