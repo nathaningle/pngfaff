@@ -9,6 +9,7 @@ Portability : non-portable
 
 Dump the components of a PNG file.
 -}
+{-# LANGUAGE TypeApplications #-}
 import           FileFormat
 import           ImageData                      ( encodeGreyscale4
                                                 , sampleImage4
@@ -31,28 +32,35 @@ main = do
       inbs <- case infile of
         "-"        -> BS.getContents
         infilename -> BS.readFile infilename
-      let Right png = decode inbs :: Either String PngFile
-      print png
+      either fail print $ decode @PngFile inbs
     DumpZdata infile -> do
       inbs <- case infile of
         "-"        -> BS.getContents
         infilename -> BS.readFile infilename
-      let Right (PngFile chunks) = decode inbs
-      mapM_ (BS.putStr . extractZdata) chunks
+      let zdump (PngFile chunks) = mapM_ (BS.putStr . extractZdata) chunks
+        in either fail zdump $ decode @PngFile inbs
+    DumpData infile -> do
+      inbs <- case infile of
+        "-"        -> BS.getContents
+        infilename -> BS.readFile infilename
+      let dump (PngFile chunks) = BS.putStr $ extractData chunks
+        in either fail dump $ decode @PngFile inbs
     ListChunks infile -> do
       inbs <- case infile of
         "-"        -> BS.getContents
         infilename -> BS.readFile infilename
-      let Right (PngFile chunks) = decode inbs
-      mapM_ (putStrLn . listChunk) chunks
+      let list (PngFile chunks) = mapM_ (putStrLn . listChunk) chunks
+        in either fail list $ decode @PngFile inbs
     Reencode infile outfile -> do
       inbs <- case infile of
         "-"        -> BS.getContents
         infilename -> BS.readFile infilename
-      let Right outbs = reencode inbs
-      case outfile of
-        "-"         -> BS.putStr outbs
-        outfilename -> BS.writeFile outfilename outbs
+      case reencode inbs of
+        Left err    -> fail err
+        Right outbs ->
+          case outfile of
+            "-"         -> BS.putStr outbs
+            outfilename -> BS.writeFile outfilename outbs
     Demo outfile -> do
       let ihdr  = Ihdr 16 16 Greyscale4 Deflate Adaptive NoInterlace
           png   = PngFile [ihdr, encodeGreyscale4 sampleImage4, Iend]

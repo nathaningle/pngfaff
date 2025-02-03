@@ -16,6 +16,7 @@ import           Options.Applicative
 
 data FaffCommand = Dump FilePath
                  | DumpZdata FilePath
+                 | DumpData FilePath
                  | ListChunks FilePath
                  | Reencode FilePath FilePath
                  | Demo FilePath
@@ -27,7 +28,13 @@ optionParser = info (helper <*> faffCommand) (fullDesc <> progDesc "Faff around 
 
 faffCommand :: Parser FaffCommand
 faffCommand = hsubparser
-  (dumpCommand <> dumpZdataCommand <> listChunksCommand <> reencodeCommand <> demoCommand)
+  (  dumpCommand
+  <> dumpZdataCommand
+  <> dumpDataCommand
+  <> listChunksCommand
+  <> reencodeCommand
+  <> demoCommand
+  )
 
 dumpCommand :: Mod CommandFields FaffCommand
 dumpCommand = command "dump" (info dumpOptions (progDesc "Dump PNG file data"))
@@ -37,11 +44,20 @@ dumpOptions =
   Dump <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Input PNG file")
 
 dumpZdataCommand :: Mod CommandFields FaffCommand
-dumpZdataCommand = command "dump-zdata" (info dumpZdataOptions (progDesc "Dump zlib IDAT data"))
+dumpZdataCommand =
+  command "dump-zdata" (info dumpZdataOptions (progDesc "Dump compressed IDAT data"))
 
 dumpZdataOptions :: Parser FaffCommand
 dumpZdataOptions =
   DumpZdata <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Input PNG file")
+
+dumpDataCommand :: Mod CommandFields FaffCommand
+dumpDataCommand =
+  command "dump-data" (info dumpDataOptions (progDesc "Dump uncompressed IDAT data"))
+
+dumpDataOptions :: Parser FaffCommand
+dumpDataOptions =
+  DumpData <$> strArgument (metavar "FILE" <> value "-" <> showDefault <> help "Input PNG file")
 
 listChunksCommand :: Mod CommandFields FaffCommand
 listChunksCommand = command "list" (info listChunksOptions (progDesc "List PNG file chunks"))
